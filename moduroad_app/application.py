@@ -26,7 +26,8 @@ CLIENT = InferenceHTTPClient(
 file_path_spe = 'moduroad_app/cashe_data/graph_spe.graphml'
  # .pickle 파일 경로 유지
 
-file_path = 'moduroad_app/cashe_data/api_graph.graphml'
+file_path = 'moduroad_app/cashe_data/api_graph.pickle'
+
 with open(file_path, 'rb') as file:
     network_g = pickle.load(file)
 
@@ -37,10 +38,10 @@ def find_path_api():
     start = (data['start_lat'], data['start_lon'])
     end = (data['end_lat'], data['end_lon'])
     
-    route = find_shortest_path(start, end, network_g)
+    route ,distance, time = find_shortest_path(start, end, network_g)
 
     # 여기서는 경로(route)를 직접 반환하고 있으나, 실제로는 경로에 대한 상세 정보를 제공하는 것이 좋습니다.
-    return jsonify({'route': route})
+    return jsonify({'route': route, 'distance' : distance,'time':time})
 
 @app.route('/find-path_spe', methods=['POST'])
 def find_path_spe_api():
@@ -48,10 +49,10 @@ def find_path_spe_api():
     start = (data['start_lat'], data['start_lon'])
     end = (data['end_lat'], data['end_lon'])
     
-    route = find_shortest_path(start, end, network_spe)
+    route ,distance, time= find_shortest_path(start, end, network_spe)
 
     # 여기서는 경로(route)를 직접 반환하고 있으나, 실제로는 경로에 대한 상세 정보를 제공하는 것이 좋습니다.
-    return jsonify({'route': route})
+    return jsonify({'route': route, 'distance' : distance,'time':time})
 
 @app.route('/detect', methods=['POST'])
 def detect():
