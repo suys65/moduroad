@@ -24,10 +24,10 @@ def find_shortest_path(start, end, network, type):
         speed_kmph = 3.7
         weights = 'length'
     elif type == 'wheel':
-        speed_kmph = 4.7
+        speed_kmph = 4
         weights = 'w_weight'
     elif type == 'elder':
-        speed_kmph = 4.7
+        speed_kmph = 2.5
         weights = 'e_weight'
 
     G = network
