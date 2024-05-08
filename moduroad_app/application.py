@@ -12,6 +12,7 @@ import io
 import osmnx as ox
 
 
+
 app = Flask(__name__, static_url_path='')
 
 CLIENT = InferenceHTTPClient(
@@ -19,14 +20,7 @@ CLIENT = InferenceHTTPClient(
     api_key="TIcrpEjP7QDYM8tnrZG4"
 )
 
-
-#file_path = 'moduroad_app\cashe_data\graph.graphml'
-#network_g = nx.read_graphml(file_path)
-
-file_path_spe = 'moduroad_app/cashe_data/graph_spe.graphml'
- # .pickle 파일 경로 유지
-
-file_path = 'moduroad_app/cashe_data/api_graph.pickle'
+file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/Wheelchair_graph.pickle'
 
 with open(file_path, 'rb') as file:
     network_g = pickle.load(file)
@@ -37,22 +31,14 @@ def find_path_api():
     data = request.json
     start = (data['start_lat'], data['start_lon'])
     end = (data['end_lat'], data['end_lon'])
-    
-    route ,distance, time = find_shortest_path(start, end, network_g)
+
+    type = data['type']
+    route ,distance, time, obstacle = find_shortest_path(start, end, network_g, type)
 
     # 여기서는 경로(route)를 직접 반환하고 있으나, 실제로는 경로에 대한 상세 정보를 제공하는 것이 좋습니다.
-    return jsonify({'route': route, 'distance' : distance,'time':time})
+    return jsonify({'route': route, 'distance' : distance,'time':time, 'obstacle':obstacle})
 
-@app.route('/find-path_spe', methods=['POST'])
-def find_path_spe_api():
-    data = request.json
-    start = (data['start_lat'], data['start_lon'])
-    end = (data['end_lat'], data['end_lon'])
-    
-    route ,distance, time= find_shortest_path(start, end, network_spe)
 
-    # 여기서는 경로(route)를 직접 반환하고 있으나, 실제로는 경로에 대한 상세 정보를 제공하는 것이 좋습니다.
-    return jsonify({'route': route, 'distance' : distance,'time':time})
 
 @app.route('/detect', methods=['POST'])
 def detect():
@@ -71,6 +57,8 @@ def detect():
         return jsonify({"success": True}), 200
     else:
         return jsonify({"success": False}), 200
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

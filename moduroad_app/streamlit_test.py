@@ -22,7 +22,7 @@ def find_shortest_path(start, end, network, speed_kmph=3.7):
     end_node = ox.distance.nearest_nodes(G, end[1], end[0])
     
     # A* 알고리즘으로 최단 경로 찾기
-    route = nx.astar_path(G, start_node, end_node, weight='weight')  # 여기서 'weight'를 'length'로 수정해야 합니다.
+    route = nx.astar_path(G, start_node, end_node, weight='length')  # 여기서 'weight'를 'length'로 수정해야 합니다.
     
     # 라인 출력 및 거리, 시간 계산
     line_strings = []
@@ -36,7 +36,7 @@ def find_shortest_path(start, end, network, speed_kmph=3.7):
         
         if edge_data and 'geometry' in edge_data:
             line_strings.append(edge_data['geometry'])
-            edge_length = edge_data['weight']  # 엣지 길이
+            edge_length = edge_data['length']  # 엣지 길이
             total_length += edge_length
         else:
             print(f"경로상의 노드 쌍 {source} -> {target} 사이의 엣지를 찾을 수 없습니다.")
@@ -84,13 +84,13 @@ st.sidebar.header('Input Coordinates')
 
 # 출발지의 위도와 경도 입력
 st.sidebar.subheader('Start Point:')
-start_lat = st.sidebar.text_input('Start Latitude', '37.379625')
-start_lon = st.sidebar.text_input('Start Longitude', '126.619987')
+start_lat = st.sidebar.text_input('Start Latitude', '37.3774689')
+start_lon = st.sidebar.text_input('Start Longitude', '126.6349327')
 
 # 도착지의 위도와 경도 입력
 st.sidebar.subheader('End Point:')
-end_lat = st.sidebar.text_input('End Latitude', '37.377111')
-end_lon = st.sidebar.text_input('End Longitude', '126.632043')
+end_lat = st.sidebar.text_input('End Latitude', '37.3761117')
+end_lon = st.sidebar.text_input('End Longitude', '126.6345200')
 
 # 속도 입력 (기본값은 3.7km/h)
 speed_kmph = st.sidebar.number_input('Speed (km/h)', value=3.7)
@@ -100,7 +100,7 @@ if st.sidebar.button('Find Shortest Path'):
     start = (float(start_lat), float(start_lon))
     end = (float(end_lat), float(end_lon))
     
-    # 네트워크 그래프 로딩 (실제 파일 경로로 수정 필요)
+    # 네트워크 그래프 로딩 
     file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/api_graph.pickle'
     with open(file_path, 'rb') as file:
         network_g = pickle.load(file)
