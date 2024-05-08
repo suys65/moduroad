@@ -14,6 +14,7 @@ class Point:
         
 def point_to_dict(point):
     return {'x': point.x, 'y': point.y}
+
 def find_shortest_path(start, end, network, type):
    
     #설정 값
@@ -145,10 +146,10 @@ if st.sidebar.button('Find Shortest Path'):
         network_g = pickle.load(file)
     # 네트워크 그래프 로딩 및 최단 경로 계산 (첫 번째 네트워크)
    
-    combined_line_string1, total_length1, total_time1,obstacles1 = find_shortest_path(start, end, network_g,type='general')
+    combined_line_string1, total_length1, total_time1, obstacles1 = find_shortest_path(start, end, network_g, 'general')
     
     # 네트워크 그래프 로딩 및 최단 경로 계산 (두 번째 네트워크)
-    combined_line_string2, total_length2, total_time2 ,obstacles2 = find_shortest_path(start, end, network_g,type='wheel')
+    combined_line_string2, total_length2, total_time2 ,obstacles2 = find_shortest_path(start, end, network_g, 'wheel')
     
     # 결과 비교 및 출력
     st.write(f"네트워크 1 - 총 거리: {total_length1}, 소요 시간: {total_time1}")
