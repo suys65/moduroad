@@ -16,28 +16,38 @@ class Point:
         
 def point_to_dict(point):
     return {'x': point.x, 'y': point.y}
-def find_shortest_path(start, end, network, type):
-   
+def find_shortest_path(start, end, network, types):
+    speed_kmph = 0
+    weights = ''
     #설정 값
     #type: general/wheel/elder
-    if type == 'general':
+    if types == 'general':
         speed_kmph = 3.7
         weights = 'length'
-    elif type == 'wheel':
+    elif types == 'wheel':
         speed_kmph = 4
         weights = 'w_weight'
-    elif type == 'elder':
+    elif types == 'elder':
         speed_kmph = 2.5
         weights = 'e_weight'
-
+    
     G = network
     G.graph['crs'] = 'epsg:4326'    
     # 가장 가까운 노드 찾기
     start_node = ox.distance.nearest_nodes(G, start[1], start[0])
     end_node = ox.distance.nearest_nodes(G, end[1], end[0])
-    
+    # 가중치 속성이 각 간선에 실제로 존재하는지 확인
+    weight_exists = all(weights in data for _, _, data in G.edges(data=True))
+
+    if weight_exists:
+        # 모든 간선에 가중치 속성이 존재하면 A* 알고리즘 실행
+        route = nx.astar_path(G, start_node, end_node, weight=weights)
+        #print("경로 찾기 성공:", route)
+    else:
+        # 가중치 속성이 없는 간선이 있으면 경고 메시지 출력
+        raise AttributeError(f"경고: '{weights}' 속성이 모든 간선에 존재하지 않습니다.")
     # A* 알고리즘으로 최단 경로 찾기
-    route = nx.astar_path(G, start_node, end_node, weight=weights)  # 여기서 'weight'를 'length'로 수정해야 합니다.
+    route = nx.astar_path(G, start_node, end_node, weight = weights)  
     
     # 라인 출력 및 거리, 시간 계산
     line_strings = []
