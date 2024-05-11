@@ -15,7 +15,8 @@ class Point:
         self.y = y
         
 def point_to_dict(point):
-    return {'x': point.x, 'y': point.y}
+    return [point.x, point.y]
+
 def find_shortest_path(start, end, network, types):
     speed_kmph = 0
     weights = ''

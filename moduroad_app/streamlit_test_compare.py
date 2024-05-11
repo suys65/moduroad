@@ -150,22 +150,44 @@ if st.sidebar.button('Find Shortest Path'):
     
     # 네트워크 그래프 로딩 및 최단 경로 계산 (두 번째 네트워크)
     combined_line_string2, total_length2, total_time2 ,obstacles2 = find_shortest_path(start, end, network_g, 'wheel')
-    
+     # 네트워크 그래프 로딩 및 최단 경로 계산 (3네트워크)
+    combined_line_string3, total_length3, total_time3 ,obstacles3 = find_shortest_path(start, end, network_g, 'elder')
     # 결과 비교 및 출력
     st.write(f"네트워크 1 - 총 거리: {total_length1}, 소요 시간: {total_time1}")
     st.write(f"네트워크 2 - 총 거리: {total_length2}, 소요 시간: {total_time2}")
-    
+    st.write(f"네트워크 3 - 총 거리: {total_length3}, 소요 시간: {total_time3}")
     # Folium 지도 생성
     m = folium.Map(location=[(float(start_lat) + float(end_lat)) / 2, (float(start_lon) + float(end_lon)) / 2], zoom_start=14)
     
     # 첫 번째 네트워크의 최단 경로를 지도에 추가
     if not combined_line_string1.is_empty:
-        folium.GeoJson(combined_line_string1, style_function=lambda x: {'color': 'blue', 'weight': 5, 'dashArray': '5, 5'}).add_to(m)
-        
+        folium.GeoJson(combined_line_string1, style_function=lambda x: {'color': 'gray', 'weight': 5, 'dashArray': '5, 5'}).add_to(m)
+    # obstacles1이 리스트 안에 사전 형태로 되어 있는 경우의 예시:
+    # obstacles1 = [{'name1': [lat1, lon1]}, {'name2': [lat2, lon2]}, ...]
+
+    for obstacle_dict in obstacles1:
+        for key in obstacle_dict:
+            locations = obstacle_dict[key]
+            longitude = locations[0]['x']
+            latitude = locations[0]['y']
+            # folium에서 요구하는 위치 형식인 [위도, 경도] 리스트로 변환
+            location = [latitude, longitude]
+            folium.CircleMarker(
+                location=location,  # [위도, 경도]
+                popup=key,
+                radius=5,  # 반경을 미터 단위로 지정
+                color='red',  # 원의 경계선 색상
+                fill=True,  # 원 내부를 색칠할 지 여부
+                fill_color='red').add_to(m)
+
     # 두 번째 네트워크의 최단 경로를 지도에 추가
     if not combined_line_string2.is_empty:
-        folium.GeoJson(combined_line_string2, style_function=lambda x: {'color': 'red', 'weight': 5}).add_to(m)
-        
+        folium.GeoJson(combined_line_string2, style_function=lambda x: {'color': 'blue', 'weight': 5}).add_to(m)
+
+    # 세 번째 네트워크의 최단 경로를 지도에 추가
+    if not combined_line_string3.is_empty:
+        folium.GeoJson(combined_line_string3, style_function=lambda x: {'color': 'green', 'weight': 5}).add_to(m)
+           
     # 시작과 끝 지점에 마커 추가
     folium.Marker(location=start, popup='Start', icon=folium.Icon(color='green')).add_to(m)
     folium.Marker(location=end, popup='End', icon=folium.Icon(color='red')).add_to(m)
@@ -176,4 +198,4 @@ if st.sidebar.button('Find Shortest Path'):
 else:
     st.write('Enter the start and end coordinates and press "Find Shortest Path".')
 
-# Streamlit 앱 실행을 위해 커맨드 라인에 'streamlit run app.py' 입력
+# Streamlit 앱 실행을 위해 커맨드 라인에 'streamlit run C:/my_code/moduroad/moduroad_app/streamlit_test_compare.py' 입력
