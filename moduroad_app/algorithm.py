@@ -15,6 +15,7 @@ class Point:
         self.y = y
         
 def point_to_dict(point):
+    print(type(point.y))
     return [point.x, point.y]
 
 def find_shortest_path(start, end, network, types):
@@ -22,14 +23,14 @@ def find_shortest_path(start, end, network, types):
     weights = ''
     #설정 값
     #type: general/wheel/elder
-    if types == 'general':
+    if types == 'normal':
         speed_kmph = 3.7
         weights = 'length'
-    elif types == 'wheel':
-        speed_kmph = 4
+    elif types == 'wheelchair':
+        speed_kmph = 2.7
         weights = 'w_weight'
-    elif types == 'elder':
-        speed_kmph = 2.5
+    elif types == 'elderly':
+        speed_kmph = 2.7
         weights = 'e_weight'
     
     G = network
