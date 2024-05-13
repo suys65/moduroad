@@ -8,27 +8,27 @@ import pandas as pd
 import pickle
 from inference_sdk import InferenceHTTPClient
 import networkx as nx
-#from PIL import Image
+from PIL import Image
 import io
 import osmnx as ox
-
+from shapely.geometry import Point
 
 
 app = Flask(__name__, static_url_path='')
-network_g = None
 
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
     api_key="TIcrpEjP7QDYM8tnrZG4"
 )
-@app.before_first_request
-def load_cache_data():
-    global network_g
-    file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/Wheelchair_graph.pickle'
 
-    with open(file_path, 'rb') as file:
-        network_g = pickle.load(file)
-    # 캐시 데이터 로드 로직
+
+global network_g
+
+file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/Wheelchair_graph.pickle'
+
+with open(file_path, 'rb') as file:
+    network_g = pickle.load(file)
+    
     
 
 
@@ -48,12 +48,23 @@ def find_path_api():
 
 @app.route('/detect', methods=['POST'])
 def detect():
+    global network_g
     if 'image' not in request.files:
         return '이미지 파일이 없습니다.', 400
 
     image_file = request.files['image']
+    longitude = request.form['longitude']
+    latitude = request.form['latitude']
+    longitude = float(longitude)
+    latitude = float(latitude)
+
+    local= Point(longitude, latitude)
+
     image_bytes = image_file.read()
     image = Image.open(io.BytesIO(image_bytes))
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+        
     network_g, result = add_obstacles(image, local, G = network_g)
 
     return result

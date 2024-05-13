@@ -1,21 +1,3 @@
-'''
-입력 : 사진, 현위치
-1. 사진에 장애물이 있는지? true,false
-2. 장애물 = point(현위치)
-3. 현위치 - 엣지 찾기 (nearest_edge 함수)
-4. G/firebase - 그 엣지의 특성 업데이트( 어떤 장애물이냐에따라)
-
-출력 True/False
-
-
-result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2")
-    
-    # result["predictions"] 존재 여부에 따라 True 또는 False 반환
-    if "predictions" in result and result["predictions"]:
-        return jsonify({"success": True}), 200
-    else:
-        return jsonify({"success": False}), 200
-'''
 from inference_sdk import InferenceHTTPClient
 from PIL import Image
 from flask import Flask, request, jsonify
@@ -25,17 +7,59 @@ CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
     api_key="TIcrpEjP7QDYM8tnrZG4"
 )
+
+
+def calculate_edge_weights(edge_data, e_length_weight, e_obstacle_weights, w_length_weight, w_obstacle_weights):
+  
+    # e_weight 계산
+    e_total_weight = edge_data.get('length', 0) * e_length_weight
+    for obstacle, weight in e_obstacle_weights.items():
+        if obstacle in edge_data and edge_data[obstacle] != 0:
+            num_obstacles = len(edge_data[obstacle]) if isinstance(edge_data[obstacle], list) else 0
+            e_total_weight += num_obstacles * weight
+    edge_data['e_weight'] = e_total_weight
+
+    # w_weight 계산
+    w_total_weight = edge_data.get('length', 0) * w_length_weight
+    for obstacle, weight in w_obstacle_weights.items():
+        if obstacle in edge_data and edge_data[obstacle] != 0:
+            num_obstacles = len(edge_data[obstacle]) if isinstance(edge_data[obstacle], list) else 0
+            w_total_weight += num_obstacles * weight
+    edge_data['w_weight'] = w_total_weight
+
+    return edge_data
+#---------------------------------------------------------------------------------------------------------------------------#
+# e_weight 계산을 위한 가중치
+e_length_weight = 0.164
+e_obstacle_weights = {
+    'slope': 0.195,
+    'stair_steep': 0.268,
+    'bollard': 0.069,
+    'crosswalk_curb': 0.069,
+    'sidewalk_curb': 0.069
+}
+
+# w_weight 계산을 위한 가중치 (예시로 임의의 값을 사용함)
+w_length_weight = 0.045
+w_obstacle_weights = {
+    'slope': 0.182,
+    'stair_steep': 10,
+    'bollard': 0.253,
+    'crosswalk_curb': 0.253,
+    'sidewalk_curb': 0.253
+}
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------#
 # 장애물 가까이에 있는 엣지 가중치 증가 함수 정의
 def update_edge_weights(G, point, attribute_name):
     # 가장 가까운 엣지 찾기
-    
+    G.graph['crs'] = 'epsg:4326'
     nearest_edge_nodes = ox.distance.nearest_edges(G, X=point.x, Y=point.y)  # OSMnx는 (y, x) 형식으로 좌표를 사용합니다.
-    print(nearest_edge_nodes)
     # nearest_edge_nodes는 (u, v, key) 형태의 튜플입니다.
     u, v, key = nearest_edge_nodes
-    print(nearest_edge_nodes)
     # 해당 엣지의 데이터 가져오기
-    nearest_edge = G[u][v][key]
+    nearest_edge = G[u][v][key]   #edge_data
     print(nearest_edge)
     # 가장 가까운 엣지의 가중치 업데이트
     # 시작 지점에 마커 추가
@@ -54,24 +78,35 @@ def update_edge_weights(G, point, attribute_name):
             nearest_edge[attribute_name] = [current_value, point]
             #print("change")
         print(nearest_edge)
-    
-        return jsonify({"success": True}), 200
+        # 함수 호출
+        nearest_edge = calculate_edge_weights(nearest_edge, e_length_weight, e_obstacle_weights, w_length_weight, w_obstacle_weights)
+        print(nearest_edge)
+        return G, jsonify({"success": True,
+                           "obstacles": attribute_name})
+#-----------------------------------------------------------------------------------------------------------------------------------#
     
 
-def find_shortest_path(image, local, G):
+def add_obstacles(image, local, G):
     G.graph['crs'] = 'epsg:4326'
     result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2")
-    
+    result1 = CLIENT.infer(image, model_id="wheelchair-g2qh2/1")
+    print(result)
+    print("222", result1)
     # result["predictions"] 존재 여부에 따라 True 또는 False 반환
     if "predictions" in result and result["predictions"]: #계단 감지 경우
-        return update_edge_weights(G, local, attribute_name = 'stair')
+        return update_edge_weights(G, local, attribute_name = 'stair_steep')
     
-    else:#계단이 감지되지 않음
-        return jsonify({"success": False}), 200
+    #계단이 감지되지 않음
+    elif "predictions" in result1 :
+        for prediction in result1["predictions"]:
+            if prediction["class"] == "bollard":
+                return update_edge_weights(G, local, attribute_name='bollard')
+            elif prediction["class"] == "sidewalk chin":
+                return update_edge_weights(G, local, attribute_name='sidewalk_curb')
+            else :
+                continue
+        return G, jsonify({"success": False})
+    
+    else : 
+        return G, jsonify({"success": False})
 
-
-
-
-
-
-    return 
