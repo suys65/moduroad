@@ -3,6 +3,7 @@
 from flask import Flask, request, jsonify
 import math
 from algorithm import find_shortest_path
+from add_obstacle import add_obstacles
 import pandas as pd
 import pickle
 from inference_sdk import InferenceHTTPClient
@@ -14,16 +15,21 @@ import osmnx as ox
 
 
 app = Flask(__name__, static_url_path='')
+network_g = None
 
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
     api_key="TIcrpEjP7QDYM8tnrZG4"
 )
+@app.before_first_request
+def load_cache_data():
+    global network_g
+    file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/Wheelchair_graph.pickle'
 
-file_path = 'C:/my_code/moduroad/moduroad_app/cashe_data/Wheelchair_graph.pickle'
-
-with open(file_path, 'rb') as file:
-    network_g = pickle.load(file)
+    with open(file_path, 'rb') as file:
+        network_g = pickle.load(file)
+    # 캐시 데이터 로드 로직
+    
 
 
 @app.route('/find-path', methods=['POST'])
@@ -48,15 +54,10 @@ def detect():
     image_file = request.files['image']
     image_bytes = image_file.read()
     image = Image.open(io.BytesIO(image_bytes))
+    network_g, result = add_obstacles(image, local, G = network_g)
 
-    # 이미지 파일을 모델에 전달하여 객체 탐지 수행
-    result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2")
+    return result
     
-    # result["predictions"] 존재 여부에 따라 True 또는 False 반환
-    if "predictions" in result and result["predictions"]:
-        return jsonify({"success": True}), 200
-    else:
-        return jsonify({"success": False}), 200
 
 
 
