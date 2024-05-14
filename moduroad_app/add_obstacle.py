@@ -29,7 +29,7 @@ def calculate_edge_weights(edge_data, e_length_weight, e_obstacle_weights, w_len
 
     return edge_data
 #---------------------------------------------------------------------------------------------------------------------------#
-# e_weight 계산을 위한 가중치
+# e_weight 계산을 위한 가중치 (노약자)
 e_length_weight = 0.164
 e_obstacle_weights = {
     'slope': 0.195,
@@ -39,7 +39,7 @@ e_obstacle_weights = {
     'sidewalk_curb': 0.069
 }
 
-# w_weight 계산을 위한 가중치 (예시로 임의의 값을 사용함)
+# w_weight 계산을 위한 가중치 (휠체어)
 w_length_weight = 0.045
 w_obstacle_weights = {
     'slope': 0.182,
@@ -88,25 +88,26 @@ def update_edge_weights(G, point, attribute_name):
 
 def add_obstacles(image, local, G):
     G.graph['crs'] = 'epsg:4326'
-    result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2")
-    result1 = CLIENT.infer(image, model_id="wheelchair-g2qh2/1")
-    print(result)
-    print("222", result1)
+    #result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2") #result1 = CLIENT.infer(image, model_id="wheelchair-g2qh2/1")
+    result = CLIENT.infer(image, model_id="up_down_stairs_v2/1")
+    result1 = CLIENT.infer(image, model_id="-1-pkbth/2")
+    result2 = CLIENT.infer(image, model_id="curbs-bxcqk/1")
+
     # result["predictions"] 존재 여부에 따라 True 또는 False 반환
     if "predictions" in result and result["predictions"]: #계단 감지 경우
         return update_edge_weights(G, local, attribute_name = 'stair_steep')
     
     #계단이 감지되지 않음
     elif "predictions" in result1 :
-        for prediction in result1["predictions"]:
-            if prediction["class"] == "bollard":
+        for prediction in result1["predictions"][:2]:
+            if prediction["class"] == "bollard" and prediction["confidence"] >=0.6:
                 return update_edge_weights(G, local, attribute_name='bollard')
-            elif prediction["class"] == "sidewalk chin":
+            
+    elif "predictions" in result2 :
+        for prediction in result2["predictions"][:2]:
+            if prediction["class"] == "curb" and prediction["confidence"] >=0.6:
                 return update_edge_weights(G, local, attribute_name='sidewalk_curb')
-            else :
-                continue
+    else :
         return G, jsonify({"success": False})
     
-    else : 
-        return G, jsonify({"success": False})
 
