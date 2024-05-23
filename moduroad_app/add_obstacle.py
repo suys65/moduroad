@@ -81,33 +81,13 @@ def update_edge_weights(G, point, attribute_name):
         # 함수 호출
         nearest_edge = calculate_edge_weights(nearest_edge, e_length_weight, e_obstacle_weights, w_length_weight, w_obstacle_weights)
         print(nearest_edge)
-        return G, jsonify({"success": True,
-                           "obstacles": attribute_name})
+        return G, jsonify({"success": True})
 #-----------------------------------------------------------------------------------------------------------------------------------#
     
 
-def add_obstacles(image, local, G):
-    G.graph['crs'] = 'epsg:4326'
-    #result = CLIENT.infer(image, model_id="stairs_detection-jaj7e/2") #result1 = CLIENT.infer(image, model_id="wheelchair-g2qh2/1")
-    result = CLIENT.infer(image, model_id="up_down_stairs_v2/1")
-    result1 = CLIENT.infer(image, model_id="-1-pkbth/2")
-    result2 = CLIENT.infer(image, model_id="curbs-bxcqk/1")
+def register(obstacleType, local, G):
 
-    # result["predictions"] 존재 여부에 따라 True 또는 False 반환
-    if "predictions" in result and result["predictions"]: #계단 감지 경우
-        return update_edge_weights(G, local, attribute_name = 'stair_steep')
+    return update_edge_weights(G, local, obstacleType)
     
-    #계단이 감지되지 않음
-    elif "predictions" in result1 :
-        for prediction in result1["predictions"][:2]:
-            if prediction["class"] == "bollard" and prediction["confidence"] >=0.6:
-                return update_edge_weights(G, local, attribute_name='bollard')
-            
-    elif "predictions" in result2 :
-        for prediction in result2["predictions"][:2]:
-            if prediction["class"] == "curb" and prediction["confidence"] >=0.6:
-                return update_edge_weights(G, local, attribute_name='sidewalk_curb')
-    else :
-        return G, jsonify({"success": False})
     
 
